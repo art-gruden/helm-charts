@@ -1,0 +1,61 @@
+# API Reference: https://prometheus-operator.dev/docs/api-reference/api/
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: team-sre-qa-calert
+  labels:
+    kiwigrid_com_operated_by: dpe
+    kiwigrid_com_owned_by: dpe
+spec:
+  receivers:
+  - name: google-chat-sre-qa
+    webhookConfigs:
+    - sendResolved: true
+      url: http://calert:6000/dispatch?room=SRE_internal
+  route:
+    receiver: google-chat-sre-qa
+    continue: true
+    groupBy:
+      - cluster
+      - alertname
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 1h
+    matchers:
+    - name: cluster
+      value: kiwigrid-production
+    - name: owner
+      value: sre
+---
+# API Reference: https://prometheus-operator.dev/docs/api-reference/api/
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: team-sre-incident-hotline-gchat
+  labels:
+    kiwigrid_com_operated_by: dpe 
+    kiwigrid_com_owned_by: dpe
+spec:
+  receivers:
+  - name: incident-hotline-gchat
+    webhookConfigs:
+    webhookConfigs:
+    - sendResolved: true
+      url: http://calert:6000/dispatch
+  route:
+    receiver: incident-hotline-gchat
+    continue: true
+    groupBy:
+      - cluster
+      - alertname
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 30m
+    matchers:
+      - name: oncall
+        value: "true"
+      - name: severity
+        value: "P1"
+      - name: cluster
+        matchType: "=~"
+        value: "kiwigrid-production|kiwi-internal"

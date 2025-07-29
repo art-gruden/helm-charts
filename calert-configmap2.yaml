@@ -1,0 +1,20 @@
+# calert-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: calert-config
+  namespace: monitoring
+data:
+  config.toml: |
+    [app]
+    address = "0.0.0.0:6000"
+    server_timeout = "60s"
+    enable_request_logs = true
+    log = "info"
+
+    [providers.your-chat-room] # This is the *name* of your provider, used in Alertmanager's dispatch URL
+    type = "google_chat" # <-- CRITICAL: Ensure the type is defined here in the TOML
+    endpoint = "" # This will be overridden by the environment variable from the secret
+    max_idle_conns = 50
+    timeout = "7s"
+    thread_ttl = "12h"
