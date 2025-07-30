@@ -4,6 +4,9 @@ metadata:
   name: {{ include "alertmanager-gchat-integration.fullname" . }}
   labels:
     {{- include "alertmanager-gchat-integration.labels" . | nindent 4 }}
+    app.kubernetes.io/name: alertmanager-gchat-integration # Explicitly add if not covered by .labels
+    kiwigrid_com_operated_by: sre # Your required label
+    kiwigrid_com_owned_by: sre   # Your required label
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -19,6 +22,9 @@ spec:
     {{- end }}
       labels:
         {{- include "alertmanager-gchat-integration.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/name: alertmanager-gchat-integration # Explicitly add if not covered by .labels
+        kiwigrid_com_operated_by: sre # Your required label
+        kiwigrid_com_owned_by: sre   # Your required label
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -27,6 +33,14 @@ spec:
       serviceAccountName: {{ include "alertmanager-gchat-integration.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        runAsNonRoot: true # Ensure the container runs as non-root
+        runAsUser: 1000 # Specific user ID for this container
+        seccompProfile:
+          type: RuntimeDefault # Recommended for container-level seccomp
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

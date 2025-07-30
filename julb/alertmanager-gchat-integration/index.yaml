@@ -3,10 +3,10 @@ entries:
   alertmanager-gchat-integration:
   - apiVersion: v2
     appVersion: 1.0.5
-    created: "2025-07-29T16:14:07.957505463+02:00"
+    created: "2025-07-30T13:45:50.576198271+02:00"
     description: This chart installs a service that enables GChat integration with
       Prometheus AlertManager.
-    digest: c9e378a3ed8db6d13f81290524f676d5b086a8bfdc51e9c86bddabeaf5e2b185
+    digest: d8436d04809b85950de72fb1163feaab478b0919f5dc186963180499af72dce9
     icon: https://www.julb.me/images/logo.svg
     name: alertmanager-gchat-integration
     sources:
@@ -16,4 +16,4 @@ entries:
     urls:
     - alertmanager-gchat-integration-1.0.5.tgz
     version: 1.0.5
-generated: "2025-07-29T16:14:07.956904745+02:00"
+generated: "2025-07-30T13:45:50.575738849+02:00"
