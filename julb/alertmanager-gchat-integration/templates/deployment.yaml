@@ -1,12 +1,16 @@
+# templates/deployment.yaml - **FINAL CORRECTED VERSION**
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "alertmanager-gchat-integration.fullname" . }}
   labels:
     {{- include "alertmanager-gchat-integration.labels" . | nindent 4 }}
-    app.kubernetes.io/name: alertmanager-gchat-integration # Explicitly add if not covered by .labels
-    kiwigrid_com_operated_by: sre # Your required label
-    kiwigrid_com_owned_by: sre   # Your required label
+    # --- REQUIRED LABELS FOR DEPLOYMENT OBJECT ITSELF ---
+    # Ensure these match your Gatekeeper policy.
+    app.kubernetes.io/name: alertmanager-gchat-integration
+    kiwigrid_com_operated_by: dpe # Set your correct value (e.g., sre, dpe)
+    kiwigrid_com_owned_by: dpe   # Set your correct value
+    # ----------------------------------------------------
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -17,34 +21,46 @@ spec:
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
-    {{- with .Values.podAnnotations }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-    {{- end }}
+      {{- end }}
       labels:
         {{- include "alertmanager-gchat-integration.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/name: alertmanager-gchat-integration # Explicitly add if not covered by .labels
-        kiwigrid_com_operated_by: sre # Your required label
-        kiwigrid_com_owned_by: sre   # Your required label
+        # --- REQUIRED LABELS FOR PODS CREATED BY THIS DEPLOYMENT ---
+        # Ensure these match your Gatekeeper policy.
+        app.kubernetes.io/name: alertmanager-gchat-integration
+        kiwigrid_com_operated_by: dpe # Set your correct value
+        kiwigrid_com_owned_by: dpe   # Set your correct value
+        # -----------------------------------------------------------
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "alertmanager-gchat-integration.serviceAccountName" . }}
+      # --- POD-LEVEL SECURITY CONTEXT (from .Values.podSecurityContext) ---
+      # ONLY fields that apply to the entire pod/volumes should be here (like fsGroup).
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-        allowPrivilegeEscalation: false
-        capabilities:
-          drop:
-            - ALL
-        runAsNonRoot: true # Ensure the container runs as non-root
-        runAsUser: 1000 # Specific user ID for this container
-        seccompProfile:
-          type: RuntimeDefault # Recommended for container-level seccomp
+        # DO NOT place container-specific securityContext fields here.
+        # They belong under containers[].securityContext.
+
       containers:
         - name: {{ .Chart.Name }}
+          # --- CONTAINER-LEVEL SECURITY CONTEXT (from .Values.securityContext) ---
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
+            # Explicitly add/override container-specific fields if needed,
+            # ensuring they are at the correct (container) level.
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
+            runAsUser: 65534
+            # runAsGroup: 65534 # This is typically a pod-level field, moving here is often tolerated but less strict API.
+            seccompProfile:
+              type: RuntimeDefault
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
